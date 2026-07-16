@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coffee Interpretation Challenge</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #f5f3ef;
+      color: #222;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .screen {
+      display: none;
+      min-height: 100vh;
+      padding: 40px 20px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .screen.active { display: flex; }
+
+    .card {
+      width: 100%;
+      max-width: 820px;
+      padding: 45px;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.10);
+    }
+
+    h1, h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    h1 { font-size: 38px; }
+    h2 { font-size: 30px; }
+
+    p {
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    .center { text-align: center; }
+
+    .language-buttons,
+    .download-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 35px;
+    }
+
+    button {
+      padding: 14px 25px;
+      border: 0;
+      border-radius: 9px;
+      background: #34271f;
+      color: #fff;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    button:hover:not(:disabled) { opacity: 0.85; }
+
+    button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .main-button {
+      display: block;
+      min-width: 180px;
+      margin: 30px auto 0;
+    }
+
+    .waiting-button {
+      width: 100%;
+      max-width: 460px;
+      background: #6c625b;
+    }
+
+    .download-buttons button { min-width: 220px; }
+
+    .form-group { margin-bottom: 23px; }
+    .conditional-group {
+      display: none;
+      margin-top: -8px;
+      margin-bottom: 23px;
+      padding: 16px;
+      background: #f7f5f2;
+      border-radius: 9px;
+    }
+
+    .conditional-group.visible {
+      display: block;
+    }
+
+
+    .form-group label,
+    .question-label {
+      display: block;
+      margin-bottom: 9px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #bbb;
+      border-radius: 8px;
+      background: #fff;
+      font-family: inherit;
+      font-size: 17px;
+    }
+
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .consent-box {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-top: 25px;
+      padding: 18px;
+      background: #f7f5f2;
+      border-radius: 9px;
+    }
+
+    .consent-box input {
+      width: auto;
+      margin-top: 5px;
+    }
+
+    .consent-box label {
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .small-note {
+      color: #555;
+      font-size: 15px;
+    }
+
+    .instruction-list {
+      margin: 25px 0;
+      padding-left: 28px;
+    }
+
+    .instruction-list li {
+      margin-bottom: 14px;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    #trial-card { max-width: 900px; }
+
+    .trial-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 18px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    #timer {
+      min-width: 190px;
+      text-align: right;
+    }
+
+    #stimulus {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      max-height: 470px;
+      margin: 20px auto 30px;
+      object-fit: contain;
+    }
+
+    .response-info {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      margin-top: 8px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .response-note {
+      margin-top: 8px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .likert-question { margin: 35px 0; }
+
+    .post-task-question {
+      margin: 30px 0;
+      padding: 20px;
+      background: #f7f5f2;
+      border-radius: 12px;
+    }
+
+    .post-task-question-text {
+      display: block;
+      margin-bottom: 14px;
+      font-size: 19px;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .post-task-reminder {
+      margin: 16px 0 0;
+      color: #666;
+      font-size: 15px;
+      text-align: center;
+    }
+
+    .likert-scale {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .likert-option { position: relative; }
+
+    .likert-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .likert-option label {
+      display: block;
+      padding: 14px 5px;
+      border: 1px solid #bbb;
+      border-radius: 8px;
+      background: #fff;
+      text-align: center;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .likert-option label:hover {
+      border-color: #34271f;
+    }
+
+    .likert-option input:checked + label {
+      background: #34271f;
+      color: #fff;
+      border-color: #34271f;
+    }
+
+    .scale-endpoints {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 9px;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .error {
+      min-height: 22px;
+      margin-top: 18px;
+      color: #b00020;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .tutorial-video {
+      display: block;
+      width: 100%;
+      max-width: 720px;
+      margin: 24px auto;
+      border-radius: 12px;
+      background: #000;
+    }
+
+    .tutorial-note {
+      margin-top: 24px;
+      padding: 24px 28px;
+      background: #fff7f7;
+      border: 3px solid #c62828;
+      border-radius: 12px;
+      color: #8b0000;
+      font-size: 23px;
+      line-height: 1.6;
+      font-weight: 700;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(198, 40, 40, 0.12);
+    }
+
+    .tutorial-explanation {
+      margin: 20px 0 24px;
+      padding: 20px;
+      background: #f7f5f2;
+      border-radius: 10px;
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .tutorial-explanation p {
+      margin: 0 0 14px;
+      font-size: 17px;
+    }
+
+    .tutorial-explanation p:last-child {
+      margin-bottom: 0;
+    }
+
+    .tutorial-explanation h3 {
+      margin: 0 0 14px;
+      font-size: 24px;
+      line-height: 1.35;
+    }
+
+    .important-red {
+      margin: 18px 0 24px;
+      padding: 16px 18px;
+      border: 2px solid #c62828;
+      border-radius: 10px;
+      color: #c62828;
+      background: #fff7f7;
+      font-size: 18px;
+      line-height: 1.6;
+      font-weight: 700;
+    }
+
+    @media (max-width: 650px) {
+      .card { padding: 28px 20px; }
+      h1 { font-size: 30px; }
+      .trial-header { flex-direction: column; }
+      #timer { text-align: left; }
+      .likert-scale { gap: 4px; }
+      .likert-option label { padding: 12px 2px; }
+    }
+  </style>
+</head>
+
+<body>
+  <section id="language-screen" class="screen active">
+    <div class="card center">
+      <h1>Choose Your Language</h1>
+      <p>Dilinizi seçin · Choose your language · 언어를 선택하세요</p>
+
+      <div class="language-buttons">
+        <button type="button" onclick="selectLanguage('tr')">Türkçe</button>
+        <button type="button" onclick="selectLanguage('en')">English</button>
+        <button type="button" onclick="selectLanguage('ko')">한국어</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="welcome-screen" class="screen">
+    <div class="card center">
+      <h1 id="welcome-title"></h1>
+      <p id="welcome-text"></p>
+
+      <button
+        id="welcome-button"
+        type="button"
+        class="main-button"
+        onclick="showScreen('consent-screen')"
+      ></button>
+    </div>
+  </section>
+
+  <section id="consent-screen" class="screen">
+    <div class="card">
+      <h2 id="consent-title"></h2>
+      <p id="anonymous-note"></p>
+
+      <div class="consent-box">
+        <input id="consent-checkbox" type="checkbox">
+        <label id="consent-checkbox-label" for="consent-checkbox"></label>
+      </div>
+
+      <p id="consent-error" class="error"></p>
+
+      <button
+        id="consent-button"
+        type="button"
+        class="main-button"
+        onclick="saveConsent()"
+      ></button>
+    </div>
+  </section>
+
+  <section id="demographics-screen" class="screen">
+    <div class="card">
+      <h2 id="demographics-title"></h2>
+
+      <div class="form-group">
+        <label id="age-label" for="age"></label>
+        <input id="age" type="number" min="18" max="120">
+      </div>
+
+      <div class="form-group">
+        <label id="gender-label" for="gender"></label>
+        <select id="gender"></select>
+      </div>
+
+      <div class="form-group">
+        <label id="native-language-label" for="native-language"></label>
+        <input id="native-language" type="text" autocomplete="off">
+      </div>
+
+      <div class="form-group">
+        <label id="fortune-familiarity-label" for="fortune-familiarity"></label>
+        <select id="fortune-familiarity"></select>
+      </div>
+
+      <div class="form-group">
+        <label id="fortune-received-label" for="fortune-received"></label>
+        <select id="fortune-received"></select>
+      </div>
+
+      <div id="fortune-received-count-group" class="conditional-group">
+        <label id="fortune-received-count-label" for="fortune-received-count"></label>
+        <select id="fortune-received-count"></select>
+      </div>
+
+      <div class="form-group">
+        <label id="fortune-given-label" for="fortune-given"></label>
+        <select id="fortune-given"></select>
+      </div>
+
+      <div id="fortune-given-count-group" class="conditional-group">
+        <label id="fortune-given-count-label" for="fortune-given-count"></label>
+        <select id="fortune-given-count"></select>
+      </div>
+
+      <p id="demographics-error" class="error"></p>
+
+      <button
+        id="demographics-button"
+        type="button"
+        class="main-button"
+        onclick="saveParticipantInformation()"
+      ></button>
+    </div>
+  </section>
+
+  <section id="instructions-screen" class="screen">
+    <div class="card">
+      <h2 id="instructions-title"></h2>
+
+      <ul class="instruction-list">
+        <li id="instruction-one"></li>
+        <li id="instruction-two"></li>
+        <li id="instruction-three"></li>
+        <li id="instruction-four"></li>
+        <li id="instruction-five"></li>
+        <li id="instruction-six"></li>
+      </ul>
+
+      <button
+        id="begin-button"
+        type="button"
+        class="main-button"
+        onclick="continueFromInstructions()"
+      ></button>
+    </div>
+  </section>
+
+  <section id="fortune-info-screen" class="screen">
+    <div class="card">
+      <h2 id="fortune-info-title"></h2>
+
+      <div id="fortune-info-body" class="tutorial-explanation"></div>
+
+      <div id="fortune-info-important" class="important-red"></div>
+
+      <button
+        id="fortune-info-button"
+        type="button"
+        class="main-button"
+        onclick="showScreen('tutorial-screen')"
+      ></button>
+    </div>
+  </section>
+
+  <section id="tutorial-screen" class="screen">
+    <div class="card">
+      <h2 id="tutorial-title"></h2>
+
+      <div id="tutorial-explanation" class="tutorial-explanation"></div>
+
+      <div id="tutorial-important" class="important-red"></div>
+
+      <p id="tutorial-text"></p>
+
+      <video
+        id="tutorial-video"
+        class="tutorial-video"
+        controls
+        playsinline
+        preload="metadata"
+      >
+        <source src="coffee.MOV">
+        Your browser does not support video playback.
+      </video>
+
+      <div id="tutorial-note" class="tutorial-note"></div>
+
+      <button
+        id="understood-button"
+        type="button"
+        class="main-button"
+        onclick="beginExperiment()"
+      ></button>
+    </div>
+  </section>
+
+  <section id="trial-screen" class="screen">
+    <div id="trial-card" class="card">
+      <div class="trial-header">
+        <span id="trial-progress"></span>
+        <span id="timer"></span>
+      </div>
+
+      <img id="stimulus" alt="Coffee-cup image">
+
+      <label id="response-label" class="question-label" for="response"></label>
+
+      <textarea
+        id="response"
+        autocomplete="off"
+        autocapitalize="sentences"
+        spellcheck="true"
+      ></textarea>
+
+      <p id="response-note" class="response-note"></p>
+
+      <div class="response-info">
+        <span id="character-count"></span>
+        <span id="word-count"></span>
+      </div>
+
+      <button
+        id="waiting-button"
+        type="button"
+        class="main-button waiting-button"
+        disabled
+      ></button>
+    </div>
+  </section>
+
+  <section id="inter-trial-screen" class="screen">
+    <div class="card center">
+      <h2 id="inter-trial-title"></h2>
+      <p id="inter-trial-text"></p>
+
+      <button
+        id="inter-trial-button"
+        type="button"
+        class="main-button"
+        onclick="startNextTrialFromBreak()"
+      ></button>
+    </div>
+  </section>
+
+  <section id="post-task-screen" class="screen">
+    <div class="card">
+      <h2 id="post-task-title"></h2>
+      <p id="post-task-intro"></p>
+
+      <div class="post-task-question">
+        <div id="enjoyable-question" class="post-task-question-text"></div>
+        <div id="post-enjoyable-scale" class="likert-scale"></div>
+        <div class="scale-endpoints">
+          <span id="post-left-1"></span>
+          <span id="post-right-1"></span>
+        </div>
+      </div>
+
+      <div class="post-task-question">
+        <div id="easy-patterns-question" class="post-task-question-text"></div>
+        <div id="post-easy-patterns-scale" class="likert-scale"></div>
+        <div class="scale-endpoints">
+          <span id="post-left-2"></span>
+          <span id="post-right-2"></span>
+        </div>
+      </div>
+
+      <div class="post-task-question">
+        <div id="effortful-question" class="post-task-question-text"></div>
+        <div id="post-effortful-scale" class="likert-scale"></div>
+        <div class="scale-endpoints">
+          <span id="post-left-3"></span>
+          <span id="post-right-3"></span>
+        </div>
+      </div>
+
+      <div class="post-task-question">
+        <div id="frustrating-question" class="post-task-question-text"></div>
+        <div id="post-frustrating-scale" class="likert-scale"></div>
+        <div class="scale-endpoints">
+          <span id="post-left-4"></span>
+          <span id="post-right-4"></span>
+        </div>
+      </div>
+
+      <div class="post-task-question">
+        <div id="confidence-question" class="post-task-question-text"></div>
+        <div id="post-confidence-scale" class="likert-scale"></div>
+        <div class="scale-endpoints">
+          <span id="post-left-5"></span>
+          <span id="post-right-5"></span>
+        </div>
+      </div>
+
+      <p id="post-task-reminder" class="post-task-reminder"></p>
+      <p id="post-task-error" class="error"></p>
+
+      <button
+        id="post-task-button"
+        type="button"
+        class="main-button"
+        onclick="savePostTaskRatings()"
+      ></button>
+    </div>
+  </section>
+
+  <section id="complete-screen" class="screen">
+    <div class="card center">
+      <h1 id="complete-title"></h1>
+      <p id="complete-text"></p>
+
+      <div class="download-buttons">
+        <button id="download-trials-button" type="button" onclick="downloadTrialCSV()"></button>
+        <button id="download-items-button" type="button" onclick="downloadInterpretationCSV()"></button>
+        <button id="download-json-button" type="button" onclick="downloadFullJSON()"></button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    "use strict";
+
+    const translations = {
+      tr: {
+        welcomeTitle: "Kahve Yorumlama Çalışmasına Hoş Geldiniz",
+        welcomeText: "Bu çalışmada kahve telvesi görsellerinde ne gördüğünüzü yazmanız istenecektir. Doğru veya yanlış cevap yoktur.",
+        start: "Başla",
+
+        consentTitle: "Katılım Onayı",
+        anonymousNote: "Bu çalışma, kahve telvesi görsellerinin nasıl yorumlandığını inceleyen bağımsız bir pilot çalışmadır. Katılım gönüllüdür ve istediğiniz zaman çalışmadan ayrılabilirsiniz. Yanıtlarınız anonim olarak yalnızca araştırma ve çalışma geliştirme amacıyla kullanılacaktır.",
+        age: "Yaşınız",
+        gender: "Cinsiyetiniz",
+        selectOption: "Seçiniz",
+        female: "Kadın",
+        male: "Erkek",
+        nonBinary: "Non-binary / Diğer",
+        preferNot: "Belirtmek istemiyorum",
+        nativeLanguage: "Ana diliniz",
+                fortuneFamiliarity: "Türk kahvesi falına ne kadar aşinasınız?",
+        fortuneReceived: "Türk kahvesi falı baktırmışlığınız var mı?",
+        fortuneReceivedCount: "Şimdiye kadar yaklaşık kaç kez Türk kahvesi falı baktırdınız?",
+        fortuneGiven: "Daha önce hiç birinin Türk kahvesi falına baktınız mı?",
+        fortuneGivenCount: "Şimdiye kadar yaklaşık kaç kişinin Türk kahvesi falına baktınız?",
+        count1to2: "1–2 kez",
+        count3to5: "3–5 kez",
+        count6to10: "6–10 kez",
+        count11to20: "11–20 kez",
+        count20plus: "20’den fazla",
+        demographicsTitle: "Demografik Bilgiler",
+        yes: "Evet",
+        no: "Hayır",
+        notFamiliar: "Hiç aşina değilim",
+        veryFamiliar: "Çok aşinayım",
+        consentText: "18 yaşından büyüğüm, yukarıdaki bilgileri okudum ve gönüllü olarak katılmayı kabul ediyorum.",
+        continue: "Devam Et",
+        demographicsContinue: "Devam Et",
+        consentError: "Devam etmek için katılım onayını işaretleyin.",
+        demographicsError: "Lütfen bütün alanları doldurun ve yaşınızın 18–120 arasında olduğunu kontrol edin.",
+
+        instructionsTitle: "Talimatlar",
+        instructionOne: "Her denemede bir kahve fincanı görseli göreceksiniz.",
+        instructionTwo: "Her görsel tam 60 saniye boyunca ekranda kalacaktır.",
+        instructionThree: "60 saniye dolmadan değerlendirme ekranına veya sonraki görsele geçemezsiniz.",
+        instructionFour: "Gördüğünüz veya aklınıza gelen her şeyi yazın. Size saçma, belirsiz ya da anlamsız gelse bile yazabilirsiniz.",
+        instructionFive: "Yeni bir şey gördüğünüzde Enter tuşuna basarak yeni bir satıra geçin ve sonraki yorumunuzu yazın.",
+        instructionSix: "Doğru veya yanlış cevap yoktur. Birden fazla yorum yazabilirsiniz.",
+        begin: "Devam Et",
+        fortuneInfoTitle: "Türk Kahvesi Falı Nedir?",
+        fortuneInfoBody: "<p>Türk kahvesi falı, kahve içildikten sonra fincanın içinde kalan telve izlerine bakılarak yapılan geleneksel bir yorumlama biçimidir. İnsanlar bu izlerde şekiller, figürler, nesneler veya sahneler görmeye çalışır ve gördüklerini ya da kendilerine çağrıştırdıklarını yorumlar.</p><p>Bu desenleri yorumlamanın tek bir doğru yolu yoktur. Aynı fincanda farklı insanlar tamamen farklı şeyler görebilir.</p>",
+        fortuneInfoImportant: "ÖNEMLİ: Yalnızca koyu kahve telvesine değil; çizgilere, kıvrımlara ve telvelerin arasında kalan açık veya boş alanlara da dikkat edin.",
+        fortuneInfoContinue: "Devam Et",
+        tutorialTitle: "Nasıl Cevap Vereceksiniz?",
+        tutorialExplanation: "<p><strong>Türk kahvesi</strong>, çok ince öğütülmüş kahvenin filtre edilmeden pişirilmesiyle hazırlanır. Kahve içildikten sonra fincanın dibinde ve kenarlarında telve adı verilen kahve kalıntıları kalır.</p><p><strong>Türk kahvesi falında</strong> bu telvenin oluşturduğu izler görsel olarak yorumlanır. İnsanlar yalnızca koyu telve şekillerine değil; çizgilere, kıvrımlara, sınırlarına ve aralarında kalan açık veya boş alanlara da bakabilir.</p>",
+        tutorialImportant: "ÖNEMLİ: Görsellere bakarken yalnızca koyu kahve telvesine değil, çizgilere ve telvelerin arasında kalan açık/boş alanlara da dikkat edin. Gördüğünüz veya aklınıza gelen her şeyi, size saçma ya da anlamsız gelse bile yazın.",
+        tutorialText: "Aşağıdaki kısa videoyu izleyerek cevapların nasıl yazılacağını görebilirsiniz.",
+        tutorialNote: "Gördüğünüz veya aklınıza gelen her şeyi yazın; size saçma ya da anlamsız gelse bile. Her yeni yorum için Enter tuşuna basarak yeni bir satıra geçin. Space (boşluk) tuşu yeni satıra geçirmez.",
+        understood: "Anladım",
+
+        trialProgress: "Görsel {current} / {total}",
+        timeRemaining: "Kalan süre: {seconds} saniye",
+        responseQuestion: "Bu görüntüde ne görüyorsunuz?",
+        responsePlaceholder: "",
+        responseNote: "Gördüğünüz veya aklınıza gelen her şeyi yazın. Her yeni yorum için Enter tuşuna basarak yeni bir satıra geçin. Süre dolunca bu görsel otomatik olarak sona erecektir.",
+        characters: "Karakter: {count}",
+        words: "Kelime: {count}",
+        waiting: "60 saniye tamamlanınca otomatik ilerleyecek",
+
+        interTrialTitle: "Sonraki görsele hazır mısınız?",
+        interTrialText: "Devam etmeden önce ekrana baktığınızdan emin olun.",
+        interTrialButton: "Sonraki Görsel",
+        postTaskTitle: "Görev Sonrası Değerlendirme",
+        postTaskIntro: "Lütfen tüm görev boyunca yaşadığınız genel deneyimi değerlendirin.",
+        enjoyableQuestion: "Bu görevi ne kadar keyifli buldunuz?",
+        easyPatternsQuestion: "Görsellerde örüntü veya anlamlı şekiller bulmak ne kadar kolaydı?",
+        effortfulQuestion: "Bu görev ne kadar çaba gerektirdi?",
+        frustratingQuestion: "Bu görevi ne kadar zorlayıcı veya sinir bozucu buldunuz?",
+        confidenceQuestion: "Yazdığınız yorumlardan ne kadar eminsiniz?",
+        notAtAll: "Hiç",
+        extremely: "Çok fazla",
+        sliderReminder: "Lütfen her soru için 1 ile 7 arasında bir seçenek işaretleyin.",
+        finishStudy: "Çalışmayı Tamamla",
+        postTaskError: "Lütfen bütün değerlendirmeleri yanıtlayın.",
+
+        completeTitle: "Çalışma Tamamlandı",
+        completeText: "Katılımınız için teşekkür ederiz. Aşağıdaki düğmelerden veri dosyalarını indirebilirsiniz.",
+        downloadTrials: "Trial Özetini İndir",
+        downloadItems: "Yorum Zamanlarını İndir",
+        downloadJSON: "Tüm Ayrıntılı Veriyi İndir"
+      },
+
+      en: {
+        welcomeTitle: "Welcome to the Coffee Interpretation Challenge",
+        welcomeText: "In this study, you will be asked to describe what you see in coffee-ground images. There are no right or wrong answers.",
+        start: "Start",
+
+        consentTitle: "Participation Consent",
+        anonymousNote: "This is an independent pilot study examining how people interpret images of coffee grounds. Participation is voluntary, and you may leave the study at any time. Your responses will remain anonymous and will be used only for research and study development purposes.",
+        age: "Age",
+        gender: "Gender",
+        selectOption: "Please select",
+        female: "Woman",
+        male: "Man",
+        nonBinary: "Non-binary / Other",
+        preferNot: "Prefer not to say",
+        nativeLanguage: "Native language",
+                fortuneFamiliarity: "How familiar are you with Turkish coffee fortune-telling?",
+        fortuneReceived: "Have you ever had your Turkish coffee fortune read?",
+        fortuneReceivedCount: "Approximately how many times have you had your Turkish coffee fortune read?",
+        fortuneGiven: "Have you ever read someone else's Turkish coffee fortune?",
+        fortuneGivenCount: "Approximately how many people's Turkish coffee fortunes have you read?",
+        count1to2: "1–2 times",
+        count3to5: "3–5 times",
+        count6to10: "6–10 times",
+        count11to20: "11–20 times",
+        count20plus: "More than 20",
+        demographicsTitle: "Demographic Information",
+        yes: "Yes",
+        no: "No",
+        notFamiliar: "Not at all familiar",
+        veryFamiliar: "Very familiar",
+        consentText: "I am over 18 years old, I have read the information above, and I voluntarily agree to participate.",
+        continue: "Continue",
+        demographicsContinue: "Continue",
+        consentError: "Please confirm your consent to continue.",
+        demographicsError: "Please complete all fields and make sure your age is between 18 and 120.",
+
+        instructionsTitle: "Instructions",
+        instructionOne: "You will see one coffee-cup image in each trial.",
+        instructionTwo: "Each image will remain on the screen for the full 60 seconds.",
+        instructionThree: "You cannot continue to the rating screen or the next image before the 60 seconds have elapsed.",
+        instructionFour: "Write down anything you see or that comes to mind, even if it seems silly, vague, or meaningless.",
+        instructionFive: "Whenever you see something new, press Enter to move to a new line and type your next interpretation.",
+        instructionSix: "There are no right or wrong answers. You may provide more than one interpretation.",
+        begin: "Continue",
+        fortuneInfoTitle: "What is Turkish coffee fortune-telling?",
+        fortuneInfoBody: "<p>Turkish coffee fortune-telling is a traditional practice in which people look at the patterns left by coffee grounds inside a cup after the coffee has been drunk. They try to recognize shapes, figures, objects, or scenes in these patterns and interpret whatever they see or what the images remind them of.</p><p>There is no single correct way to interpret the patterns. Different people may see completely different things in the same coffee cup.</p>",
+        fortuneInfoImportant: "IMPORTANT: Do not look only at the dark coffee grounds. Also pay attention to lines, curves, outlines, and the light or empty spaces between the grounds.",
+        fortuneInfoContinue: "Continue",
+        tutorialTitle: "How to Respond",
+        tutorialExplanation: "<h3>What is Turkish coffee fortune-telling?</h3><p>Turkish coffee fortune-telling is a traditional practice in which people look at the patterns left by coffee grounds inside a cup after the coffee has been drunk. They try to recognize shapes, figures, objects, or scenes in these patterns and interpret whatever they see or what the images remind them of.</p><p>There is no single correct way to interpret the patterns. Different people may see completely different things in the same coffee cup.</p>",
+        tutorialImportant: "IMPORTANT: When looking at each image, pay attention not only to the dark coffee grounds, but also to the lines and the light or empty spaces between them. Write down anything you see or that comes to mind, even if it seems silly or meaningless.",
+        tutorialText: "Watch the short video below to see how to enter your responses.",
+        tutorialNote: "Write down anything you see or that comes to mind, even if it seems silly or meaningless. For each new interpretation, press Enter to move to a new line. The Space key does not create a new line.",
+        understood: "I Understand",
+
+        trialProgress: "Image {current} / {total}",
+        timeRemaining: "Time remaining: {seconds} seconds",
+        responseQuestion: "What do you see?",
+        responsePlaceholder: "",
+        responseNote: "Write down anything you see or that comes to mind. Press Enter for each new interpretation. The rating screen will open automatically when time ends.",
+        characters: "Characters: {count}",
+        words: "Words: {count}",
+        waiting: "The study will continue automatically after 60 seconds",
+
+        interTrialTitle: "Ready for the next image?",
+        interTrialText: "Please make sure you are looking at the screen before continuing.",
+        interTrialButton: "Next Image",
+        postTaskTitle: "Subjective Experience Rating",
+        postTaskIntro: "Please rate your overall experience across the entire task.",
+        enjoyableQuestion: "How enjoyable did you find the task?",
+        easyPatternsQuestion: "How easy was it to find patterns or meaningful shapes in the images?",
+        effortfulQuestion: "How effortful did you find the task?",
+        frustratingQuestion: "How frustrating did you find the task?",
+        confidenceQuestion: "How confident are you in the interpretations you reported?",
+        notAtAll: "Not at all",
+        extremely: "Extremely",
+        sliderReminder: "Please select one response from 1 to 7 for each question.",
+        finishStudy: "Finish Study",
+        postTaskError: "Please answer all ratings.",
+
+        completeTitle: "Study Complete",
+        completeText: "Thank you for participating. You can download the data files below.",
+        downloadTrials: "Download Trial Summary",
+        downloadItems: "Download Item Timings",
+        downloadJSON: "Download Full Detailed Data"
+      },
+
+      ko: {
+        welcomeTitle: "커피 이미지 해석 연구에 오신 것을 환영합니다",
+        welcomeText: "이 연구에서는 커피 찌꺼기 이미지에서 무엇이 보이는지 작성하게 됩니다. 정답이나 오답은 없습니다.",
+        start: "시작",
+
+        consentTitle: "연구 참여 동의",
+        anonymousNote: "본 연구는 사람들이 커피 찌꺼기 이미지를 어떻게 해석하는지 알아보기 위한 독립적인 파일럿 연구입니다. 참여는 자발적이며 언제든지 연구 참여를 중단할 수 있습니다. 응답은 익명으로 처리되며 연구 및 연구 절차 개선 목적으로만 사용됩니다.",
+        age: "나이",
+        gender: "성별",
+        selectOption: "선택해 주세요",
+        female: "여성",
+        male: "남성",
+        nonBinary: "논바이너리 / 기타",
+        preferNot: "응답하지 않음",
+        nativeLanguage: "모국어",
+                fortuneFamiliarity: "터키식 커피 점에 얼마나 익숙하십니까?",
+        fortuneReceived: "터키식 커피 점을 받아본 적이 있습니까?",
+        fortuneReceivedCount: "지금까지 대략 몇 번 터키식 커피 점을 받아보셨습니까?",
+        fortuneGiven: "다른 사람의 터키식 커피 점을 봐준 적이 있습니까?",
+        fortuneGivenCount: "지금까지 대략 몇 명의 터키식 커피 점을 봐주셨습니까?",
+        count1to2: "1–2회",
+        count3to5: "3–5회",
+        count6to10: "6–10회",
+        count11to20: "11–20회",
+        count20plus: "20회 초과",
+        demographicsTitle: "인구통계학적 정보",
+        yes: "예",
+        no: "아니요",
+        notFamiliar: "전혀 익숙하지 않음",
+        veryFamiliar: "매우 익숙함",
+        consentText: "본인은 만 18세를 초과하였으며, 위의 내용을 읽고 자발적으로 연구 참여에 동의합니다.",
+        continue: "계속",
+        demographicsContinue: "계속",
+        consentError: "계속하려면 연구 참여에 동의해 주세요.",
+        demographicsError: "모든 항목을 작성하고 나이가 만 18–120세인지 확인해 주세요.",
+
+        instructionsTitle: "과제 안내",
+        instructionOne: "각 시행에서 하나의 커피 잔 이미지를 보게 됩니다.",
+        instructionTwo: "각 이미지는 정확히 60초 동안 화면에 제시됩니다.",
+        instructionThree: "60초가 지나기 전에는 평가 화면이나 다음 이미지로 이동할 수 없습니다.",
+        instructionFour: "보이거나 떠오르는 것은 무엇이든 작성해 주세요. 이상하거나 모호하거나 의미 없어 보이더라도 괜찮습니다.",
+        instructionFive: "새로운 것이 보일 때마다 Enter 키를 눌러 새 줄로 이동한 뒤 다음 해석을 작성해 주세요.",
+        instructionSix: "정답이나 오답은 없습니다. 여러 가지 해석을 작성할 수 있습니다.",
+        begin: "계속",
+        fortuneInfoTitle: "터키식 커피 점이란 무엇인가요?",
+        fortuneInfoBody: "<p>터키식 커피 점은 커피를 마신 뒤 컵 안쪽에 남은 커피 찌꺼기의 무늬를 보고 해석하는 전통적인 방식입니다. 사람들은 그 무늬 속에서 형태, 인물, 사물 또는 장면을 찾아보고, 자신이 본 것이나 그 이미지가 떠올리게 하는 것을 자유롭게 해석합니다.</p><p>이 무늬를 해석하는 데에는 하나의 정답이 없습니다. 같은 커피 잔을 보더라도 사람마다 전혀 다른 것을 볼 수 있습니다.</p>",
+        fortuneInfoImportant: "중요: 진한 커피 찌꺼기만 보지 말고, 선, 곡선, 윤곽, 그리고 찌꺼기 사이의 밝거나 비어 있는 공간에도 주의를 기울여 주세요.",
+        fortuneInfoContinue: "계속",
+        tutorialTitle: "응답 방법",
+        tutorialExplanation: "<h3>터키식 커피 점이란 무엇인가요?</h3><p>터키식 커피 점은 커피를 마신 뒤 컵 안쪽에 남은 커피 찌꺼기의 무늬를 보고 해석하는 전통적인 방식입니다. 사람들은 그 무늬 속에서 형태, 인물, 사물 또는 장면을 찾아보고, 자신이 본 것이나 그 이미지가 떠올리게 하는 것을 자유롭게 해석합니다.</p><p>이 무늬를 해석하는 데에는 하나의 정답이 없습니다. 같은 커피 잔을 보더라도 사람마다 전혀 다른 것을 볼 수 있습니다.</p>",
+        tutorialImportant: "중요: 각 이미지를 볼 때 진한 커피 찌꺼기만 보지 말고, 선과 찌꺼기 사이의 밝거나 비어 있는 공간에도 주의를 기울여 주세요. 보이거나 떠오르는 것은 무엇이든, 이상하거나 의미 없어 보여도 모두 작성해 주세요.",
+        tutorialText: "아래의 짧은 영상을 보고 응답을 입력하는 방법을 확인해 주세요.",
+        tutorialNote: "보이거나 떠오르는 것은 무엇이든 작성해 주세요. 이상하거나 의미 없어 보여도 괜찮습니다. 새로운 해석마다 Enter 키를 눌러 새 줄로 이동해 주세요. Space 키는 새 줄로 이동하지 않습니다.",
+        understood: "이해했습니다",
+
+        trialProgress: "이미지 {current} / {total}",
+        timeRemaining: "남은 시간: {seconds}초",
+        responseQuestion: "무엇이 보이나요?",
+        responsePlaceholder: "",
+        responseNote: "보이거나 떠오르는 것은 무엇이든 작성해 주세요. 새로운 해석마다 Enter 키를 눌러 새 줄로 이동해 주세요. 시간이 끝나면 평가 화면이 자동으로 열립니다.",
+        characters: "글자 수: {count}",
+        words: "단어 수: {count}",
+        waiting: "60초 후 자동으로 다음 단계로 이동합니다",
+
+        interTrialTitle: "다음 이미지를 볼 준비가 되셨나요?",
+        interTrialText: "계속하기 전에 화면을 보고 있는지 확인해 주세요.",
+        interTrialButton: "다음 이미지",
+        postTaskTitle: "과제 후 주관적 경험 평가",
+        postTaskIntro: "전체 과제를 수행하면서 느낀 전반적인 경험을 평가해 주세요.",
+        enjoyableQuestion: "이 과제가 얼마나 즐거웠습니까?",
+        easyPatternsQuestion: "이미지에서 패턴이나 의미 있는 형태를 찾는 것이 얼마나 쉬웠습니까?",
+        effortfulQuestion: "이 과제는 얼마나 많은 노력이 필요했습니까?",
+        frustratingQuestion: "이 과제가 얼마나 답답하거나 힘들게 느껴졌습니까?",
+        confidenceQuestion: "본인이 작성한 해석에 대해 얼마나 확신하십니까?",
+        notAtAll: "전혀 그렇지 않음",
+        extremely: "매우 그러함",
+        sliderReminder: "각 질문에 대해 1에서 7 사이의 응답을 하나씩 선택해 주세요.",
+        finishStudy: "연구 완료",
+        postTaskError: "모든 항목에 응답해 주세요.",
+
+        completeTitle: "연구 완료",
+        completeText: "연구에 참여해 주셔서 감사합니다. 아래에서 데이터 파일을 다운로드할 수 있습니다.",
+        downloadTrials: "시행 요약 다운로드",
+        downloadItems: "해석 시간 다운로드",
+        downloadJSON: "전체 상세 데이터 다운로드"
+      }
+    };
+
+    const TOTAL_IMAGES = 10;
+    const TRIAL_DURATION_MS = 60000;
+
+    let selectedLanguage = "en";
+    let participant = {};
+    let imageOrder = [];
+    let currentTrialIndex = 0;
+    let trialResults = [];
+    let pendingTrial = null;
+    let experimentInProgress = false;
+
+    let imageStartTime = null;
+    let trialStartedAtUTC = null;
+    let firstTypingTime = null;
+    let timerInterval = null;
+    let trialDeadline = null;
+    let trialSubmitted = false;
+    let interTrialStartTime = null;
+
+    let typingEventLog = [];
+    let interpretationStates = [];
+    let previousRawLines = [""];
+
+    function t(key) {
+      return translations[selectedLanguage][key];
+    }
+
+    function seconds(ms) {
+      return Number((ms / 1000).toFixed(3));
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll(".screen").forEach(function(screen) {
+        screen.classList.remove("active");
+      });
+
+      const target = document.getElementById(screenId);
+      if (!target) {
+        console.error("Screen not found:", screenId);
+        return;
+      }
+
+      target.classList.add("active");
+      window.scrollTo(0, 0);
+    }
+
+    function selectLanguage(language) {
+      if (!translations[language]) {
+        return;
+      }
+
+      selectedLanguage = language;
+      document.documentElement.lang = language;
+      applyTranslations();
+      showScreen("consent-screen");
+    }
+
+    function applyTranslations() {
+      const ids = {
+        "welcome-title": "welcomeTitle",
+        "welcome-text": "welcomeText",
+        "welcome-button": "start",
+        "consent-title": "consentTitle",
+        "anonymous-note": "anonymousNote",
+        "age-label": "age",
+        "gender-label": "gender",
+        "native-language-label": "nativeLanguage",
+        "fortune-familiarity-label": "fortuneFamiliarity",
+        "fortune-received-label": "fortuneReceived",
+        "fortune-received-count-label": "fortuneReceivedCount",
+        "fortune-given-label": "fortuneGiven",
+        "fortune-given-count-label": "fortuneGivenCount",
+        "demographics-title": "demographicsTitle",
+        "demographics-button": "demographicsContinue",
+        "consent-checkbox-label": "consentText",
+        "consent-button": "continue",
+        "instructions-title": "instructionsTitle",
+        "instruction-one": "instructionOne",
+        "instruction-two": "instructionTwo",
+        "instruction-three": "instructionThree",
+        "instruction-four": "instructionFour",
+        "instruction-five": "instructionFive",
+        "instruction-six": "instructionSix",
+        "begin-button": "begin",
+        "fortune-info-title": "fortuneInfoTitle",
+        "fortune-info-important": "fortuneInfoImportant",
+        "fortune-info-button": "fortuneInfoContinue",
+        "tutorial-title": "tutorialTitle",
+        "tutorial-text": "tutorialText",
+        "tutorial-note": "tutorialNote",
+        "understood-button": "understood",
+        "response-label": "responseQuestion",
+        "response-note": "responseNote",
+        "waiting-button": "waiting",
+        "inter-trial-title": "interTrialTitle",
+        "inter-trial-text": "interTrialText",
+        "inter-trial-button": "interTrialButton",
+        "post-task-title": "postTaskTitle",
+        "post-task-intro": "postTaskIntro",
+        "enjoyable-question": "enjoyableQuestion",
+        "easy-patterns-question": "easyPatternsQuestion",
+        "effortful-question": "effortfulQuestion",
+        "frustrating-question": "frustratingQuestion",
+        "confidence-question": "confidenceQuestion",
+        "post-left-1": "notAtAll",
+        "post-right-1": "extremely",
+        "post-left-2": "notAtAll",
+        "post-right-2": "extremely",
+        "post-left-3": "notAtAll",
+        "post-right-3": "extremely",
+        "post-left-4": "notAtAll",
+        "post-right-4": "extremely",
+        "post-left-5": "notAtAll",
+        "post-right-5": "extremely",
+        "post-task-reminder": "sliderReminder",
+        "post-task-button": "finishStudy",
+        "complete-title": "completeTitle",
+        "complete-text": "completeText",
+        "download-trials-button": "downloadTrials",
+        "download-items-button": "downloadItems",
+        "download-json-button": "downloadJSON"
+      };
+
+      Object.entries(ids).forEach(function(entry) {
+        const element = document.getElementById(entry[0]);
+        if (element) {
+          element.textContent = t(entry[1]);
+        }
+      });
+
+      document.getElementById("fortune-info-body").innerHTML =
+        t("fortuneInfoBody");
+
+      document.getElementById("tutorial-explanation").innerHTML =
+        t("tutorialExplanation");
+
+      document.getElementById("tutorial-important").textContent =
+        t("tutorialImportant");
+
+      document.getElementById("response").placeholder = t("responsePlaceholder");
+
+      populateGenderOptions();
+      populateFamiliarityOptions();
+      initializePostTaskLikertScales();
+      updateResponseCounts();
+    }
+
+    function populateGenderOptions() {
+      document.getElementById("gender").innerHTML = `
+        <option value="">${t("selectOption")}</option>
+        <option value="woman">${t("female")}</option>
+        <option value="man">${t("male")}</option>
+        <option value="non_binary_other">${t("nonBinary")}</option>
+        <option value="prefer_not">${t("preferNot")}</option>
+      `;
+    }
+
+    function populateFamiliarityOptions() {
+      const options = [`<option value="">${t("selectOption")}</option>`];
+
+      for (let value = 1; value <= 7; value++) {
+        let label = String(value);
+
+        if (value === 1) {
+          label = `1 — ${t("notFamiliar")}`;
+        } else if (value === 7) {
+          label = `7 — ${t("veryFamiliar")}`;
+        }
+
+        options.push(`<option value="${value}">${label}</option>`);
+      }
+
+      document.getElementById("fortune-familiarity").innerHTML = options.join("");
+
+      const yesNoOptions = `
+        <option value="">${t("selectOption")}</option>
+        <option value="yes">${t("yes")}</option>
+        <option value="no">${t("no")}</option>
+      `;
+
+      document.getElementById("fortune-received").innerHTML = yesNoOptions;
+      document.getElementById("fortune-given").innerHTML = yesNoOptions;
+
+      const countOptions = `
+        <option value="">${t("selectOption")}</option>
+        <option value="1_2">${t("count1to2")}</option>
+        <option value="3_5">${t("count3to5")}</option>
+        <option value="6_10">${t("count6to10")}</option>
+        <option value="11_20">${t("count11to20")}</option>
+        <option value="20_plus">${t("count20plus")}</option>
+      `;
+
+      document.getElementById("fortune-received-count").innerHTML = countOptions;
+      document.getElementById("fortune-given-count").innerHTML = countOptions;
+
+      updateConditionalExperienceQuestions();
+    }
+
+    function updateConditionalExperienceQuestions() {
+      const receivedValue = document.getElementById("fortune-received").value;
+      const givenValue = document.getElementById("fortune-given").value;
+
+      const receivedGroup = document.getElementById("fortune-received-count-group");
+      const givenGroup = document.getElementById("fortune-given-count-group");
+
+      const receivedCount = document.getElementById("fortune-received-count");
+      const givenCount = document.getElementById("fortune-given-count");
+
+      if (receivedValue === "yes") {
+        receivedGroup.classList.add("visible");
+      } else {
+        receivedGroup.classList.remove("visible");
+        receivedCount.value = "";
+      }
+
+      if (givenValue === "yes") {
+        givenGroup.classList.add("visible");
+      } else {
+        givenGroup.classList.remove("visible");
+        givenCount.value = "";
+      }
+    }
+
+    document.getElementById("fortune-received").addEventListener(
+      "change",
+      updateConditionalExperienceQuestions
+    );
+
+    document.getElementById("fortune-given").addEventListener(
+      "change",
+      updateConditionalExperienceQuestions
+    );
+
+    const postTaskRatingDefinitions = [
+      {
+        containerId: "post-enjoyable-scale",
+        name: "post-enjoyable",
+        participantKey: "post_task_enjoyable"
+      },
+      {
+        containerId: "post-easy-patterns-scale",
+        name: "post-easy-patterns",
+        participantKey: "post_task_easy_patterns"
+      },
+      {
+        containerId: "post-effortful-scale",
+        name: "post-effortful",
+        participantKey: "post_task_effortful"
+      },
+      {
+        containerId: "post-frustrating-scale",
+        name: "post-frustrating",
+        participantKey: "post_task_frustrating"
+      },
+      {
+        containerId: "post-confidence-scale",
+        name: "post-confidence",
+        participantKey: "post_task_confident"
+      }
+    ];
+
+    function initializePostTaskLikertScales() {
+      postTaskRatingDefinitions.forEach(function(definition) {
+        const container =
+          document.getElementById(definition.containerId);
+
+        if (!container) {
+          return;
+        }
+
+        const options = [];
+
+        for (let value = 1; value <= 7; value++) {
+          const inputId =
+            `${definition.name}-${value}`;
+
+          options.push(`
+            <div class="likert-option">
+              <input
+                id="${inputId}"
+                type="radio"
+                name="${definition.name}"
+                value="${value}"
+              >
+              <label for="${inputId}">${value}</label>
+            </div>
+          `);
+        }
+
+        container.innerHTML = options.join("");
+      });
+
+      const error =
+        document.getElementById("post-task-error");
+
+      if (error) {
+        error.textContent = "";
+      }
+    }
+
+    function savePostTaskRatings() {
+      const selectedRatings = {};
+
+      for (
+        let index = 0;
+        index < postTaskRatingDefinitions.length;
+        index++
+      ) {
+        const definition =
+          postTaskRatingDefinitions[index];
+
+        const selected = document.querySelector(
+          `input[name="${definition.name}"]:checked`
+        );
+
+        if (!selected) {
+          document.getElementById(
+            "post-task-error"
+          ).textContent = t("postTaskError");
+
+          return;
+        }
+
+        selectedRatings[
+          definition.participantKey
+        ] = Number(selected.value);
+      }
+
+      Object.assign(
+        participant,
+        selectedRatings
+      );
+
+      participant.study_completed_at_utc =
+        new Date().toISOString();
+
+      experimentInProgress = false;
+
+      saveLocalBackup();
+      showScreen("complete-screen");
+    }
+
+    function continueFromInstructions() {
+      showScreen("fortune-info-screen");
+    }
+
+    function startNextTrialFromBreak() {
+      /*
+        The participant controls when the next image begins.
+        The 60-second timer starts only after the next image
+        has actually loaded inside startTrial().
+      */
+
+      if (
+        trialResults.length > 0 &&
+        interTrialStartTime !== null
+      ) {
+        const waitMs = Math.max(
+          0,
+          Math.round(
+            performance.now() - interTrialStartTime
+          )
+        );
+
+        const previousTrial =
+          trialResults[trialResults.length - 1];
+
+        previousTrial.inter_trial_wait_ms =
+          waitMs;
+
+        previousTrial.inter_trial_wait_seconds =
+          seconds(waitMs);
+      }
+
+      interTrialStartTime = null;
+
+      saveLocalBackup();
+
+      showScreen("trial-screen");
+      startTrial();
+    }
+
+    function saveConsent() {
+      const consent = document.getElementById("consent-checkbox").checked;
+
+      if (!consent) {
+        document.getElementById("consent-error").textContent = t("consentError");
+        return;
+      }
+
+      document.getElementById("consent-error").textContent = "";
+      showScreen("demographics-screen");
+    }
+
+    function saveParticipantInformation() {
+      const ageValue = document.getElementById("age").value;
+      const age = Number(ageValue);
+      const gender = document.getElementById("gender").value;
+      const nativeLanguage = document.getElementById("native-language").value.trim();
+      const fortuneFamiliarity = document.getElementById("fortune-familiarity").value;
+      const fortuneReceived = document.getElementById("fortune-received").value;
+      const fortuneReceivedCount = document.getElementById("fortune-received-count").value;
+      const fortuneGiven = document.getElementById("fortune-given").value;
+      const fortuneGivenCount = document.getElementById("fortune-given-count").value;
+      const consent = document.getElementById("consent-checkbox").checked;
+
+      const missingReceivedCount =
+        fortuneReceived === "yes" && !fortuneReceivedCount;
+
+      const missingGivenCount =
+        fortuneGiven === "yes" && !fortuneGivenCount;
+
+      if (
+        !ageValue ||
+        !Number.isFinite(age) ||
+        age < 18 ||
+        age > 120 ||
+        !gender ||
+        !nativeLanguage ||
+        !fortuneFamiliarity ||
+        !fortuneReceived ||
+        !fortuneGiven ||
+        missingReceivedCount ||
+        missingGivenCount ||
+        !consent
+      ) {
+        document.getElementById("demographics-error").textContent =
+          t("demographicsError");
+        return;
+      }
+
+      document.getElementById("demographics-error").textContent = "";
+
+      participant = {
+        participant_id: generateParticipantId(),
+        interface_language: selectedLanguage,
+        age: age,
+        gender: gender,
+        native_language: nativeLanguage,
+        fortune_familiarity: Number(fortuneFamiliarity),
+        fortune_received_before: fortuneReceived,
+        fortune_received_count: fortuneReceived === "yes" ? fortuneReceivedCount : "not_applicable",
+        fortune_given_before: fortuneGiven,
+        fortune_given_count: fortuneGiven === "yes" ? fortuneGivenCount : "not_applicable",
+        consent_given: true,
+        study_started_at_utc: new Date().toISOString()
+      };
+
+      saveLocalBackup();
+      showScreen("instructions-screen");
+    }
+
+    function generateParticipantId() {
+      const randomPart = Math.random().toString(36).slice(2, 8).toUpperCase();
+      const datePart = new Date()
+        .toISOString()
+        .replaceAll("-", "")
+        .replaceAll(":", "")
+        .replace("T", "_")
+        .slice(0, 15);
+
+      return `P_${datePart}_${randomPart}`;
+    }
+
+    function beginExperiment() {
+      imageOrder = Array.from({ length: TOTAL_IMAGES }, function(_, index) {
+        return `images/${index + 1}.png`;
+      });
+
+      imageOrder = shuffle(imageOrder);
+      currentTrialIndex = 0;
+      trialResults = [];
+      experimentInProgress = true;
+
+      saveLocalBackup();
+      showScreen("trial-screen");
+      startTrial();
+    }
+
+    function shuffle(array) {
+      const copy = [...array];
+
+      for (let i = copy.length - 1; i > 0; i--) {
+        const randomIndex = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[randomIndex]] = [copy[randomIndex], copy[i]];
+      }
+
+      return copy;
+    }
+
+    function startTrial() {
+      clearInterval(timerInterval);
+
+      imageStartTime = null;
+      trialStartedAtUTC = null;
+      firstTypingTime = null;
+      trialDeadline = null;
+      trialSubmitted = false;
+      typingEventLog = [];
+      interpretationStates = [];
+      previousRawLines = [""];
+
+      const image = document.getElementById("stimulus");
+      const response = document.getElementById("response");
+
+      response.value = "";
+      response.disabled = true;
+      updateResponseCounts();
+
+      document.getElementById("trial-progress").textContent = t("trialProgress")
+        .replace("{current}", currentTrialIndex + 1)
+        .replace("{total}", imageOrder.length);
+
+      document.getElementById("timer").textContent =
+        t("timeRemaining").replace("{seconds}", 60);
+
+      image.style.visibility = "hidden";
+
+      image.onload = function() {
+        image.style.visibility = "visible";
+        response.disabled = false;
+
+        imageStartTime = performance.now();
+        trialDeadline = imageStartTime + TRIAL_DURATION_MS;
+        trialStartedAtUTC = new Date().toISOString();
+
+        response.focus();
+        startTimer();
+      };
+
+      image.onerror = function() {
+        clearInterval(timerInterval);
+        response.disabled = true;
+        alert(`Image could not be loaded: ${imageOrder[currentTrialIndex]}`);
+      };
+
+      image.src = imageOrder[currentTrialIndex];
+    }
+
+    function startTimer() {
+      function tick() {
+        if (trialSubmitted || trialDeadline === null) {
+          return;
+        }
+
+        const remainingMs = Math.max(0, trialDeadline - performance.now());
+        const remainingSeconds = Math.ceil(remainingMs / 1000);
+
+        document.getElementById("timer").textContent =
+          t("timeRemaining").replace("{seconds}", remainingSeconds);
+
+        if (remainingMs <= 0) {
+          finishTrialAutomatically();
+        }
+      }
+
+      tick();
+      timerInterval = setInterval(tick, 100);
+    }
+
+    document.getElementById("response").addEventListener("input", function(event) {
+      if (imageStartTime === null || trialSubmitted) {
+        return;
+      }
+
+      const elapsedMs = Math.min(
+        TRIAL_DURATION_MS,
+        Math.max(0, Math.round(performance.now() - imageStartTime))
+      );
+
+      const text = this.value;
+
+      if (firstTypingTime === null && text.trim().length > 0) {
+        firstTypingTime = elapsedMs;
+      }
+
+      typingEventLog.push({
+        event_number: typingEventLog.length + 1,
+        t_ms: elapsedMs,
+        t_seconds: seconds(elapsedMs),
+        input_type: event.inputType || "",
+        inserted_text: event.data === null ? "" : event.data,
+        full_text: text
+      });
+
+      updateInterpretationStates(text, elapsedMs);
+      updateResponseCounts();
+    });
+
+    function updateInterpretationStates(text, elapsedMs) {
+      const rawLines = text.split(/\r?\n/);
+
+      for (let index = 0; index < rawLines.length; index++) {
+        const cleanedLine = rawLines[index].trim();
+
+        if (!cleanedLine) {
+          interpretationStates[index] = null;
+          continue;
+        }
+
+        const existing = interpretationStates[index];
+
+        if (!existing) {
+          interpretationStates[index] = {
+            raw_line_index: index,
+            interpretation: cleanedLine,
+            first_started_ms: elapsedMs,
+            first_completed_ms: null,
+            last_edited_ms: elapsedMs
+          };
+        } else if (existing.interpretation !== cleanedLine) {
+          existing.interpretation = cleanedLine;
+          existing.last_edited_ms = elapsedMs;
+        }
+
+        const state = interpretationStates[index];
+
+        if (
+          index < rawLines.length - 1 &&
+          state.first_completed_ms === null
+        ) {
+          state.first_completed_ms = elapsedMs;
+        }
+      }
+
+      if (interpretationStates.length > rawLines.length) {
+        interpretationStates.length = rawLines.length;
+      }
+
+      previousRawLines = rawLines;
+    }
+
+    function createFinalInterpretations(finalText, totalTimeMs) {
+      updateInterpretationStates(finalText, totalTimeMs);
+
+      const lines = finalText.split(/\r?\n/);
+      const finalInterpretations = [];
+      let itemNumber = 0;
+
+      lines.forEach(function(rawLine, rawIndex) {
+        const cleanedLine = rawLine.trim();
+
+        if (!cleanedLine) {
+          return;
+        }
+
+        itemNumber++;
+
+        const state = interpretationStates[rawIndex] || {
+          interpretation: cleanedLine,
+          first_started_ms: totalTimeMs,
+          first_completed_ms: null,
+          last_edited_ms: totalTimeMs
+        };
+
+        const wasCompletedWithEnter = state.first_completed_ms !== null;
+
+        /*
+          Enter'a basılmışsa yorumun tamamlanma zamanı Enter anıdır.
+          Son satırda Enter yoksa tamamlanma zamanı son karakterin yazıldığı andır.
+          Böylece 60 saniye zorunlu bekleme, son yorumu yanlışlıkla 60. saniyeye taşımaz.
+        */
+        const completedMs = wasCompletedWithEnter
+          ? Math.max(state.first_completed_ms, state.last_edited_ms)
+          : state.last_edited_ms;
+
+        finalInterpretations.push({
+          item_number: itemNumber,
+          interpretation: cleanedLine,
+          first_started_ms: state.first_started_ms,
+          first_started_seconds: seconds(state.first_started_ms),
+          first_completed_ms: completedMs,
+          first_completed_seconds: seconds(completedMs),
+          last_edited_ms: state.last_edited_ms,
+          last_edited_seconds: seconds(state.last_edited_ms),
+          finalized_ms: completedMs,
+          finalized_seconds: seconds(completedMs),
+          completion_method: wasCompletedWithEnter ? "enter" : "last_edit_at_timeout"
+        });
+      });
+
+      return finalInterpretations;
+    }
+
+    function updateResponseCounts() {
+      const response = document.getElementById("response");
+      const text = response ? response.value || "" : "";
+
+      const characterElement = document.getElementById("character-count");
+      const wordElement = document.getElementById("word-count");
+
+      if (characterElement) {
+        characterElement.textContent =
+          t("characters").replace("{count}", countCharacters(text));
+      }
+
+      if (wordElement) {
+        wordElement.textContent =
+          t("words").replace("{count}", countWords(text));
+      }
+    }
+
+    function countCharacters(text) {
+      return Array.from(text.trim()).length;
+    }
+
+    function countWords(text) {
+      const cleanedText = text.trim();
+
+      if (!cleanedText) {
+        return 0;
+      }
+
+      try {
+        const segmenter = new Intl.Segmenter(
+          selectedLanguage,
+          { granularity: "word" }
+        );
+
+        return Array.from(segmenter.segment(cleanedText))
+          .filter(function(segment) {
+            return segment.isWordLike;
+          })
+          .length;
+      } catch (error) {
+        return cleanedText.split(/\s+/).filter(Boolean).length;
+      }
+    }
+
+    function finishTrialAutomatically() {
+      if (trialSubmitted || imageStartTime === null) {
+        return;
+      }
+
+      trialSubmitted = true;
+      clearInterval(timerInterval);
+
+      const responseElement = document.getElementById("response");
+      const responseText = responseElement.value.trim();
+
+      /*
+        Zorunlu trial süresi tam 60 saniye olarak kaydedilir.
+        Tarayıcı zamanlayıcısındaki birkaç ms gecikme ölçümü etkilemez.
+      */
+      const totalTimeMs = TRIAL_DURATION_MS;
+
+      const finalInterpretations =
+        createFinalInterpretations(responseText, totalTimeMs);
+
+      responseElement.disabled = true;
+
+      const imagePath = imageOrder[currentTrialIndex];
+      const imageName = imagePath.split("/").pop();
+
+      /*
+        Main interpretation timing:
+        use the moment when the interpretation was last edited,
+        i.e. when its final written content was completed.
+
+        finalized_ms / finalized_seconds are still retained
+        separately in the detailed interpretation data.
+      */
+      const timingSummary = finalInterpretations
+        .map(function(item) {
+          return `${item.interpretation} @ ${item.last_edited_seconds}s`;
+        })
+        .join(" | ");
+
+      pendingTrial = {
+        trial_number: currentTrialIndex + 1,
+        image: imageName,
+        response: responseText,
+        response_characters: countCharacters(responseText),
+        response_words: countWords(responseText),
+        interpretation_count: finalInterpretations.length,
+        interpretation_timing_basis: "last_edited",
+        interpretation_timing_summary: timingSummary,
+        first_typing_ms: firstTypingTime === null ? "" : firstTypingTime,
+        first_typing_seconds: firstTypingTime === null ? "" : seconds(firstTypingTime),
+        total_time_ms: totalTimeMs,
+        total_time_seconds: seconds(totalTimeMs),
+        timed_out: true,
+        forced_full_duration: true,
+        trial_started_at_utc: trialStartedAtUTC,
+        trial_ended_at_utc: new Date().toISOString(),
+
+        /*
+          Filled after the participant clicks
+          "Next Image" on the inter-trial screen.
+          The final image has no next-image wait,
+          so these fields remain blank for that trial.
+        */
+        inter_trial_wait_ms: "",
+        inter_trial_wait_seconds: "",
+
+        interpretations: finalInterpretations,
+        typing_event_log: typingEventLog
+      };
+
+      trialResults.push(pendingTrial);
+      pendingTrial = null;
+      currentTrialIndex++;
+
+      saveLocalBackup();
+
+      if (currentTrialIndex >= imageOrder.length) {
+        initializePostTaskLikertScales();
+        showScreen("post-task-screen");
+        return;
+      }
+
+      /*
+        Do NOT start the next image automatically.
+        First show the ready screen.
+      */
+      interTrialStartTime = performance.now();
+      showScreen("inter-trial-screen");
+    }
+
+    function downloadTrialCSV() {
+      const columns = [
+        "participant_id",
+        "interface_language",
+        "age",
+        "gender",
+        "native_language",
+        "fortune_familiarity",
+        "fortune_received_before",
+        "fortune_received_count",
+        "fortune_given_before",
+        "fortune_given_count",
+        "consent_given",
+        "study_started_at_utc",
+        "study_completed_at_utc",
+        "post_task_enjoyable",
+        "post_task_easy_patterns",
+        "post_task_effortful",
+        "post_task_frustrating",
+        "post_task_confident",
+        "trial_number",
+        "image",
+        "response",
+        "response_characters",
+        "response_words",
+        "interpretation_count",
+        "interpretation_timing_basis",
+        "interpretation_timing_summary",
+        "first_typing_ms",
+        "first_typing_seconds",
+        "total_time_ms",
+        "total_time_seconds",
+        "timed_out",
+        "forced_full_duration",
+        "trial_started_at_utc",
+        "trial_ended_at_utc",
+        "inter_trial_wait_ms",
+        "inter_trial_wait_seconds",
+        "interpretations_json"
+      ];
+
+      const rows = trialResults.map(function(trial) {
+        const row = {
+          ...participant,
+          ...trial,
+          interpretations_json: JSON.stringify(trial.interpretations)
+        };
+
+        return columns.map(function(column) {
+          return escapeCSV(row[column]);
+        }).join(",");
+      });
+
+      const csv = columns.join(",") + "\n" + rows.join("\n");
+
+      downloadTextFile(
+        "\uFEFF" + csv,
+        `${participant.participant_id}_trials.csv`,
+        "text/csv;charset=utf-8;"
+      );
+    }
+
+    function downloadInterpretationCSV() {
+      const columns = [
+        "participant_id",
+        "interface_language",
+        "age",
+        "gender",
+        "native_language",
+        "fortune_familiarity",
+        "fortune_received_before",
+        "fortune_received_count",
+        "fortune_given_before",
+        "fortune_given_count",
+        "post_task_enjoyable",
+        "post_task_easy_patterns",
+        "post_task_effortful",
+        "post_task_frustrating",
+        "post_task_confident",
+        "trial_number",
+        "image",
+        "item_number",
+        "interpretation",
+        "first_started_ms",
+        "first_started_seconds",
+        "first_completed_ms",
+        "first_completed_seconds",
+        "last_edited_ms",
+        "last_edited_seconds",
+        "finalized_ms",
+        "finalized_seconds",
+        "completion_method",
+        "total_time_ms",
+        "inter_trial_wait_ms",
+        "inter_trial_wait_seconds",
+        "timed_out",
+        "forced_full_duration"
+      ];
+
+      const rows = [];
+
+      trialResults.forEach(function(trial) {
+        if (trial.interpretations.length === 0) {
+          const emptyRow = {
+            ...participant,
+            trial_number: trial.trial_number,
+            image: trial.image,
+            item_number: "",
+            interpretation: "",
+            first_started_ms: "",
+            first_started_seconds: "",
+            first_completed_ms: "",
+            first_completed_seconds: "",
+            last_edited_ms: "",
+            last_edited_seconds: "",
+            finalized_ms: "",
+            finalized_seconds: "",
+            completion_method: "",
+            total_time_ms: trial.total_time_ms,
+            inter_trial_wait_ms:
+              trial.inter_trial_wait_ms,
+            inter_trial_wait_seconds:
+              trial.inter_trial_wait_seconds,
+            timed_out: trial.timed_out,
+            forced_full_duration:
+              trial.forced_full_duration
+          };
+
+          rows.push(columns.map(function(column) {
+            return escapeCSV(emptyRow[column]);
+          }).join(","));
+
+          return;
+        }
+
+        trial.interpretations.forEach(function(item) {
+          const row = {
+            ...participant,
+            trial_number: trial.trial_number,
+            image: trial.image,
+            ...item,
+            total_time_ms: trial.total_time_ms,
+            inter_trial_wait_ms:
+              trial.inter_trial_wait_ms,
+            inter_trial_wait_seconds:
+              trial.inter_trial_wait_seconds,
+            timed_out: trial.timed_out,
+            forced_full_duration:
+              trial.forced_full_duration
+          };
+
+          rows.push(columns.map(function(column) {
+            return escapeCSV(row[column]);
+          }).join(","));
+        });
+      });
+
+      const csv = columns.join(",") + "\n" + rows.join("\n");
+
+      downloadTextFile(
+        "\uFEFF" + csv,
+        `${participant.participant_id}_interpretation_timings.csv`,
+        "text/csv;charset=utf-8;"
+      );
+    }
+
+    function downloadFullJSON() {
+      const completeData = {
+        participant: participant,
+        image_order: imageOrder.map(function(path) {
+          return path.split("/").pop();
+        }),
+        trials: trialResults
+      };
+
+      downloadTextFile(
+        JSON.stringify(completeData, null, 2),
+        `${participant.participant_id}_full_data.json`,
+        "application/json;charset=utf-8;"
+      );
+    }
+
+    function downloadTextFile(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = filename;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      setTimeout(function() {
+        URL.revokeObjectURL(url);
+      }, 1000);
+    }
+
+    function escapeCSV(value) {
+      if (value === undefined || value === null) {
+        return '""';
+      }
+
+      return `"${String(value).replaceAll('"', '""')}"`;
+    }
+
+    function saveLocalBackup() {
+      if (!participant.participant_id) {
+        return;
+      }
+
+      const backup = {
+        participant: participant,
+        image_order: imageOrder,
+        current_trial_index: currentTrialIndex,
+        completed_trials: trialResults,
+        pending_trial: pendingTrial,
+        saved_at_utc: new Date().toISOString()
+      };
+
+      try {
+        localStorage.setItem(
+          `coffee_experiment_${participant.participant_id}`,
+          JSON.stringify(backup)
+        );
+      } catch (error) {
+        console.warn("Local backup could not be saved:", error);
+      }
+    }
+
+    window.addEventListener("beforeunload", function(event) {
+      if (!experimentInProgress) {
+        return;
+      }
+
+      event.preventDefault();
+      event.returnValue = "";
+    });
+
+    document.addEventListener("visibilitychange", function() {
+      if (
+        document.visibilityState === "visible" &&
+        experimentInProgress &&
+        !trialSubmitted &&
+        trialDeadline !== null &&
+        performance.now() >= trialDeadline
+      ) {
+        finishTrialAutomatically();
+      }
+    });
+  </script>
+</body>
+</html>
