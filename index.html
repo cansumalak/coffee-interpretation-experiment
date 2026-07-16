@@ -90,6 +90,29 @@
 
     .download-buttons button { min-width: 220px; }
 
+    .upload-status {
+      margin: 20px 0;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .upload-status.saving {
+      background: #f3f3f3;
+      color: #444;
+    }
+
+    .upload-status.success {
+      background: #edf8ef;
+      color: #245c2d;
+    }
+
+    .upload-status.error {
+      background: #fff1f1;
+      color: #8a1f1f;
+    }
+
     .form-group { margin-bottom: 23px; }
     .conditional-group {
       display: none;
@@ -188,7 +211,7 @@
       width: auto;
       max-width: 100%;
       height: auto;
-      max-height: 470px;
+      max-height: 520px;
       margin: 20px auto 30px;
       object-fit: contain;
     }
@@ -647,6 +670,8 @@
       <h1 id="complete-title"></h1>
       <p id="complete-text"></p>
 
+      <p id="upload-status" class="upload-status" aria-live="polite"></p>
+
       <div class="download-buttons">
         <button id="download-trials-button" type="button" onclick="downloadTrialCSV()"></button>
         <button id="download-items-button" type="button" onclick="downloadInterpretationCSV()"></button>
@@ -740,7 +765,10 @@
         postTaskError: "Lütfen bütün değerlendirmeleri yanıtlayın.",
 
         completeTitle: "Çalışma Tamamlandı",
-        completeText: "Katılımınız için teşekkür ederiz. Aşağıdaki düğmelerden veri dosyalarını indirebilirsiniz.",
+        completeText: "Katılımınız için teşekkür ederiz. Yanıtlarınız otomatik olarak kaydedilecektir. Aşağıdaki dosyaları ayrıca yedek olarak indirebilirsiniz.",
+        uploadSaving: "Yanıtlarınız güvenli şekilde kaydediliyor…",
+        uploadSuccess: "Yanıtlarınız başarıyla kaydedildi. Teşekkür ederiz.",
+        uploadError: "Yanıtlarınız otomatik olarak yüklenemedi. Lütfen aşağıdaki yedek dosyalardan en az JSON dosyasını indirin.",
         downloadTrials: "Trial Özetini İndir",
         downloadItems: "Yorum Zamanlarını İndir",
         downloadJSON: "Tüm Ayrıntılı Veriyi İndir"
@@ -827,7 +855,10 @@
         postTaskError: "Please answer all ratings.",
 
         completeTitle: "Study Complete",
-        completeText: "Thank you for participating. You can download the data files below.",
+        completeText: "Thank you for participating. Your responses will be saved automatically. You may also download the files below as a backup.",
+        uploadSaving: "Your responses are being saved securely…",
+        uploadSuccess: "Your responses were saved successfully. Thank you.",
+        uploadError: "Your responses could not be uploaded automatically. Please download at least the JSON backup file below.",
         downloadTrials: "Download Trial Summary",
         downloadItems: "Download Item Timings",
         downloadJSON: "Download Full Detailed Data"
@@ -914,7 +945,10 @@
         postTaskError: "모든 항목에 응답해 주세요.",
 
         completeTitle: "연구 완료",
-        completeText: "연구에 참여해 주셔서 감사합니다. 아래에서 데이터 파일을 다운로드할 수 있습니다.",
+        completeText: "연구에 참여해 주셔서 감사합니다. 응답은 자동으로 저장됩니다. 아래 파일을 백업용으로 추가 다운로드할 수도 있습니다.",
+        uploadSaving: "응답을 안전하게 저장하고 있습니다…",
+        uploadSuccess: "응답이 성공적으로 저장되었습니다. 감사합니다.",
+        uploadError: "응답을 자동으로 업로드하지 못했습니다. 아래에서 최소한 JSON 백업 파일을 다운로드해 주세요.",
         downloadTrials: "시행 요약 다운로드",
         downloadItems: "해석 시간 다운로드",
         downloadJSON: "전체 상세 데이터 다운로드"
@@ -923,6 +957,15 @@
 
     const TOTAL_IMAGES = 10;
     const TRIAL_DURATION_MS = 60000;
+
+    const SUPABASE_URL =
+      "https://xwhjqaxlqqqzqxepjphs.supabase.co";
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_qeGr-QxLA4aXnKPcoDAKew_0PLn3EYx";
+
+    const SUPABASE_SUBMISSIONS_ENDPOINT =
+      `${SUPABASE_URL}/rest/v1/experiment_submissions`;
 
     let selectedLanguage = "en";
     let participant = {};
@@ -1221,7 +1264,7 @@
       }
     }
 
-    function savePostTaskRatings() {
+    async function savePostTaskRatings() {
       const selectedRatings = {};
 
       for (
@@ -1261,6 +1304,146 @@
 
       saveLocalBackup();
       showScreen("complete-screen");
+
+      setUploadStatus(
+        t("uploadSaving"),
+        "saving"
+      );
+
+      const uploadSucceeded =
+        await submitCompleteDataToSupabase();
+
+      if (uploadSucceeded) {
+        setUploadStatus(
+          t("uploadSuccess"),
+          "success"
+        );
+
+        try {
+          localStorage.setItem(
+            `coffee_experiment_uploaded_${participant.participant_id}`,
+            "true"
+          );
+        } catch (error) {
+          console.warn(
+            "Upload confirmation could not be stored locally:",
+            error
+          );
+        }
+      } else {
+        setUploadStatus(
+          t("uploadError"),
+          "error"
+        );
+      }
+    }
+
+    function setUploadStatus(message, statusClass) {
+      const element =
+        document.getElementById("upload-status");
+
+      if (!element) {
+        return;
+      }
+
+      element.textContent = message;
+      element.className =
+        `upload-status ${statusClass}`;
+    }
+
+    function buildCompleteData() {
+      return {
+        participant: participant,
+
+        image_order: imageOrder.map(
+          function(path) {
+            return path.split("/").pop();
+          }
+        ),
+
+        trials: trialResults
+      };
+    }
+
+    async function submitCompleteDataToSupabase() {
+      if (!participant.participant_id) {
+        console.error(
+          "Cannot upload data without a participant ID."
+        );
+        return false;
+      }
+
+      let alreadyUploaded = false;
+
+      try {
+        alreadyUploaded =
+          localStorage.getItem(
+            `coffee_experiment_uploaded_${participant.participant_id}`
+          ) === "true";
+      } catch (error) {
+        console.warn(
+          "Upload status could not be checked locally:",
+          error
+        );
+      }
+
+      if (alreadyUploaded) {
+        return true;
+      }
+
+      const payload = {
+        participant_id:
+          participant.participant_id,
+
+        full_data:
+          buildCompleteData()
+      };
+
+      try {
+        const response = await fetch(
+          SUPABASE_SUBMISSIONS_ENDPOINT,
+          {
+            method: "POST",
+
+            headers: {
+              "apikey":
+                SUPABASE_PUBLISHABLE_KEY,
+
+              "Content-Type":
+                "application/json",
+
+              "Prefer":
+                "return=minimal"
+            },
+
+            body:
+              JSON.stringify(payload)
+          }
+        );
+
+        if (!response.ok) {
+          const responseText =
+            await response.text();
+
+          console.error(
+            "Supabase upload failed:",
+            response.status,
+            responseText
+          );
+
+          return false;
+        }
+
+        return true;
+
+      } catch (error) {
+        console.error(
+          "Supabase upload error:",
+          error
+        );
+
+        return false;
+      }
     }
 
     function continueFromInstructions() {
@@ -1907,13 +2090,8 @@
     }
 
     function downloadFullJSON() {
-      const completeData = {
-        participant: participant,
-        image_order: imageOrder.map(function(path) {
-          return path.split("/").pop();
-        }),
-        trials: trialResults
-      };
+      const completeData =
+        buildCompleteData();
 
       downloadTextFile(
         JSON.stringify(completeData, null, 2),
