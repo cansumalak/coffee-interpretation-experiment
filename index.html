@@ -208,7 +208,7 @@
 
     #stimulus-frame {
       width: 100%;
-      height: 430px;
+      height: 390px;
       margin: 5px auto 15px;
       overflow: hidden;
       display: flex;
@@ -223,7 +223,7 @@
       height: auto;
       max-height: none;
       object-fit: contain;
-      transform: scale(1.35);
+      transform: scale(1.12);
       transform-origin: center center;
     }
 
@@ -980,6 +980,9 @@
     const SUPABASE_SUBMISSIONS_ENDPOINT =
       `${SUPABASE_URL}/rest/v1/experiment_submissions`;
 
+    const SUPABASE_PROGRESS_ENDPOINT =
+      `${SUPABASE_URL}/rest/v1/experiment_progress`;
+
     let selectedLanguage = "en";
     let participant = {};
     let imageOrder = [];
@@ -1000,6 +1003,9 @@
     let spaceKeyLog = [];
     let interpretationStates = [];
     let previousRawLines = [""];
+
+    let progressAutosaveTimer = null;
+    let lastProgressAutosaveSignature = "";
 
     function t(key) {
       return translations[selectedLanguage][key];
@@ -1328,6 +1334,10 @@
         await submitCompleteDataToSupabase();
 
       if (uploadSucceeded) {
+        saveProgressToSupabase(
+          "completed"
+        );
+
         setUploadStatus(
           t("uploadSuccess"),
           "success"
@@ -1460,6 +1470,181 @@
       }
     }
 
+    function buildProgressSnapshot(status) {
+      const responseElement =
+        document.getElementById("response");
+
+      const currentResponse =
+        responseElement
+          ? responseElement.value
+          : "";
+
+      const activeImage =
+        imageOrder[currentTrialIndex] || "";
+
+      return {
+        participant_id:
+          participant.participant_id,
+
+        status:
+          status,
+
+        current_trial_index:
+          currentTrialIndex,
+
+        current_trial_number:
+          currentTrialIndex < imageOrder.length
+            ? currentTrialIndex + 1
+            : "",
+
+        current_image:
+          activeImage
+            ? activeImage.split("/").pop()
+            : "",
+
+        current_response:
+          currentResponse,
+
+        current_response_characters:
+          countCharacters(currentResponse),
+
+        current_response_words:
+          countWords(currentResponse),
+
+        current_trial_started_at_utc:
+          trialStartedAtUTC,
+
+        current_first_typing_ms:
+          firstTypingTime,
+
+        current_typing_event_log:
+          typingEventLog,
+
+        current_space_key_log:
+          spaceKeyLog,
+
+        participant:
+          participant,
+
+        image_order:
+          imageOrder.map(
+            function(path) {
+              return path.split("/").pop();
+            }
+          ),
+
+        completed_trials:
+          trialResults,
+
+        saved_at_utc:
+          new Date().toISOString()
+      };
+    }
+
+    async function saveProgressToSupabase(status) {
+      if (!participant.participant_id) {
+        return false;
+      }
+
+      const snapshot =
+        buildProgressSnapshot(status);
+
+      const signatureSource = {
+        status:
+          snapshot.status,
+        current_trial_index:
+          snapshot.current_trial_index,
+        current_response:
+          snapshot.current_response,
+        completed_trials:
+          snapshot.completed_trials.length
+      };
+
+      const signature =
+        JSON.stringify(signatureSource);
+
+      if (
+        status === "active_trial" &&
+        signature === lastProgressAutosaveSignature
+      ) {
+        return true;
+      }
+
+      try {
+        const response = await fetch(
+          SUPABASE_PROGRESS_ENDPOINT,
+          {
+            method: "POST",
+
+            headers: {
+              "apikey":
+                SUPABASE_PUBLISHABLE_KEY,
+
+              "Content-Type":
+                "application/json",
+
+              "Prefer":
+                "return=minimal"
+            },
+
+            body:
+              JSON.stringify({
+                participant_id:
+                  participant.participant_id,
+
+                status:
+                  status,
+
+                progress_data:
+                  snapshot
+              })
+          }
+        );
+
+        if (!response.ok) {
+          const responseText =
+            await response.text();
+
+          console.error(
+            "Supabase progress autosave failed:",
+            response.status,
+            responseText
+          );
+
+          return false;
+        }
+
+        lastProgressAutosaveSignature =
+          signature;
+
+        return true;
+
+      } catch (error) {
+        console.error(
+          "Supabase progress autosave error:",
+          error
+        );
+
+        return false;
+      }
+    }
+
+    function scheduleProgressAutosave() {
+      clearTimeout(
+        progressAutosaveTimer
+      );
+
+      progressAutosaveTimer =
+        setTimeout(
+          function() {
+            saveProgressToSupabase(
+              "active_trial"
+            );
+          },
+          3000
+        );
+    }
+
     function continueFromInstructions() {
       showScreen("fortune-info-screen");
     }
@@ -1567,6 +1752,11 @@
       };
 
       saveLocalBackup();
+
+      saveProgressToSupabase(
+        "demographics_completed"
+      );
+
       showScreen("instructions-screen");
     }
 
@@ -1593,6 +1783,11 @@
       experimentInProgress = true;
 
       saveLocalBackup();
+
+      saveProgressToSupabase(
+        "experiment_started"
+      );
+
       showScreen("trial-screen");
       startTrial();
     }
@@ -1647,6 +1842,10 @@
 
         response.focus();
         startTimer();
+
+        saveProgressToSupabase(
+          "trial_started"
+        );
       };
 
       image.onerror = function() {
@@ -1742,6 +1941,8 @@
 
       updateInterpretationStates(text, elapsedMs);
       updateResponseCounts();
+
+      scheduleProgressAutosave();
     });
 
     function updateInterpretationStates(text, elapsedMs) {
@@ -1832,7 +2033,7 @@
           last_edited_seconds: seconds(state.last_edited_ms),
           finalized_ms: completedMs,
           finalized_seconds: seconds(completedMs),
-          completion_method: wasCompletedWithEnter ? "enter" : "last_edit_at_timeout"
+          completion_method: wasCompletedWithEnter ? "enter" : "last_edit_no_enter"
         });
       });
 
@@ -1961,6 +2162,10 @@
       currentTrialIndex++;
 
       saveLocalBackup();
+
+      saveProgressToSupabase(
+        "trial_completed"
+      );
 
       if (currentTrialIndex >= imageOrder.length) {
         initializePostTaskLikertScales();
