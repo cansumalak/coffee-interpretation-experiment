@@ -208,7 +208,7 @@
 
     #stimulus-frame {
       width: 100%;
-      height: 390px;
+      height: 360px;
       margin: 5px auto 15px;
       overflow: hidden;
       display: flex;
@@ -221,10 +221,9 @@
       width: auto;
       max-width: 100%;
       height: auto;
-      max-height: none;
+      max-height: 500px;
       object-fit: contain;
-      transform: scale(1.12);
-      transform-origin: center center;
+      transform: none;
     }
 
     .response-info {
@@ -387,6 +386,14 @@
       #timer { text-align: left; }
       .likert-scale { gap: 4px; }
       .likert-option label { padding: 12px 2px; }
+
+      #stimulus-frame {
+        height: 300px;
+      }
+
+      #stimulus {
+        max-height: 420px;
+      }
     }
   </style>
 </head>
